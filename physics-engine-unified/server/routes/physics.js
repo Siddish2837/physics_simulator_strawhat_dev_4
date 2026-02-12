@@ -61,24 +61,48 @@ router.post('/parse', requireAuth(), async (req, res) => {
             }
 
             try {
-                // Find potential JSON block
-                const startIdx = responseText.indexOf('{');
-                const endIdx = responseText.lastIndexOf('}');
+                // 1. Pre-process response: Remove any invisible chars/markdown wrappers
+                let cleanText = responseText.trim();
+
+                // 2. Find potential JSON boundaries
+                const startIdx = cleanText.indexOf('{');
+                const endIdx = cleanText.lastIndexOf('}');
 
                 if (startIdx === -1 || endIdx === -1) {
-                    throw new Error('No JSON object found in response');
+                    throw new Error('No JSON object boundaries ({}) found in AI response');
                 }
 
-                const jsonStr = responseText.substring(startIdx, endIdx + 1);
-                const rawJson = JSON.parse(jsonStr);
+                const jsonStr = cleanText.substring(startIdx, endIdx + 1);
+
+                let rawJson;
+                try {
+                    rawJson = JSON.parse(jsonStr);
+                } catch (parseErr) {
+                    console.error('[physics-route] JSON.parse failed. Content:', jsonStr);
+                    // Attempt aggressive cleaning: remove common AI errors
+                    const aggressiveClean = jsonStr
+                        .replace(/,\s*([\]}])/g, '$1') // remove trailing commas
+                        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // quote unquoted keys
+                        .replace(/'/g, '"'); // replace single with double quotes
+
+                    try {
+                        rawJson = JSON.parse(aggressiveClean);
+                    } catch (retryErr) {
+                        throw new Error(`Invalid JSON format: ${parseErr.message}`);
+                    }
+                }
+
                 const normalized = normalizeParams(rawJson);
                 return originalJson({ success: true, data: normalized });
             } catch (e) {
-                console.error('[physics-route] JSON Parse Error:', e);
+                console.error('[physics-route] Handling Error:', e);
                 return originalJson({
                     success: false,
-                    error: 'Failed to parse AI JSON',
-                    raw: responseText.substring(0, 100) + '...'
+                    error: e.message || 'Failed to parse AI JSON',
+                    diagnostic: {
+                        snippet: responseText.substring(0, 100),
+                        full_length: responseText.length
+                    }
                 });
             }
         };

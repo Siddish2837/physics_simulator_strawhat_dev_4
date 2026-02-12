@@ -1,250 +1,95 @@
-📘 AI Physics Simulation Platform
+# Physics Simulation Visualizer ⚛️
 
-Complete AI-powered Physics Simulation Platform
-Backend + Unified Physics Engine + Frontend App
+An interactive, premium physics simulation platform built with React, Vite, and the Canvas API. This visualizer transforms natural language problems into physically accurate, real-time 2D simulations using AI.
 
-Built by Team Strawhat Devs 🚀
+---
 
-🏗 Project Structure (Updated)
+## ✨ Features
 
-<img width="579" height="542" alt="image" src="https://github.com/user-attachments/assets/74e4c36d-6c43-45e4-882b-205c00d48f8f" />
+### 1. High-Fidelity Physics Engines
+*   **Premium 2D Collisions**: Impulse-based resolution with conservation of momentum and energy. Supports elastic/inelastic modes, penetration correction, and real-time KE/Momentum analytics.
+*   **Advanced Optics**: Converging/diverging lenses and mirrors with ray-tracing, stable unit scaling (m/cm), and virtual/real image calculation.
+*   **Kinematics (1D/2D)**: Projectile motion with air resistance, parabolic trajectories, and impact detection.
+*   **Dynamics & Forces**: Inclined plane simulations with static/kinetic friction, tension, and net force vectors.
+*   **Oscillations & Waves**: SHM with spring-mass systems, damping effects, and transverse wave propagation.
+*   **Electromagnetism**: Charge behavior in uniform electric/magnetic fields, Lorentz force visualization, and cyclotron motion.
 
+### 2. AI-Powered Extraction
+*   **Natural Language Processing**: powered by Gemini, the system extracts mass, velocity, gravity, and topic-specific constants from raw text.
+*   **Intelligent Presets**: 20+ pre-configured scenarios across all major physics domains.
 
-🔎 Important Clarification
+### 3. Modern Engineering UI
+*   **Real-time HUD**: Dynamic data display showing velocities, energy states, and collision counts.
+*   **Interactive Controls**: Floating play/pause/reset buttons, zoom controls, and live parameter sliders.
+*   **Visual Polish**: Neon aesthetics, motion trails, vector arrows, and glassmorphic panels.
 
-physics-engine-unified/src/App.jsx
-✅ This is the actual frontend application.
+---
 
-Root index.html
-⚠️ This is only for backend testing and debugging.
+## 🛠️ Step-by-Step Installation
 
-physics-engine-unified/index.html
-✅ This is the real Vite entry for the frontend app.
+Follow these steps to get the environment running locally:
 
-🧠 What This Platform Does
-
-Accepts physics problems as natural language
-
-Uses AI to extract structured parameters
-
-Identifies motion type
-
-Runs realistic physics simulation
-
-Supports premium collision engine
-
-Uses Clerk for authentication
-
-Uses AI API (Gemini/OpenAI) for parsing
-
-⚙️ Tech Stack
-Backend
-
-Node.js
-
-Express.js
-
-AI API (Gemini / OpenAI)
-
-dotenv
-
-CORS
-
-Rate limiter
-
-Frontend
-
-React (App.jsx)
-
-Vite
-
-Canvas-based simulation
-
-Modular physics engine
-
-Authentication
-
-Clerk
-
-Physics Engine
-
-Custom impulse-based collision engine
-
-Formula-based solver
-
-JSON-driven simulation
-
-🚀 Installation Guide (Step-by-Step – Beginner Friendly)
-1️⃣ Clone the Project
+### 1. Clone the Repository
+```bash
 git clone https://github.com/Siddish2837/vibe_coding_backend.git
 cd vibe_coding_backend
+```
 
-2️⃣ Setup Backend
+### 2. Backend Setup (Server)
+The backend handles AI processing and requires an API key.
+```bash
 cd server
 npm install
+```
+*   Create a `.env` file in the `server/` directory:
+    ```env
+    API_KEY=your_gemini_api_key
+    CLERK_SECRET_KEY=your_clerk_secret_key
+    CLERK_PUBLISHABLE_KEY=your_clerk_pub_key
+    PORT=3000
+    ```
+*   Start the server:
+    ```bash
+    npm run dev
+    ```
 
-
-Create .env inside server/
-
-PORT=3000
-AI_API_KEY=your_ai_api_key_here
-CLERK_SECRET_KEY=your_clerk_secret_key_here
-
-
-Start backend:
-
-npm start
-
-
-You should see:
-
-Server running on http://localhost:3000
-
-3️⃣ Setup Frontend (Actual App)
-cd ../physics-engine-unified
+### 3. Frontend Setup
+```bash
+cd ..
 npm install
-
-
-Create .env inside physics-engine-unified/
-
-VITE_API_URL=http://localhost:3000
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
-
-
-Start frontend:
-
-npm run dev
-
-
-Open:
-
-http://localhost:5173
-
-
-That loads App.jsx (actual app).
-
-🔐 How to Add API Keys Properly
-
-NEVER commit real keys.
-
-Instead create:
-
-server/.env
-AI_API_KEY=sk-xxxx
-CLERK_SECRET_KEY=sk_test_xxxx
-
-physics-engine-unified/.env
-VITE_API_URL=http://localhost:3000
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxx
-
-
-Add .env to .gitignore.
-
-🚨 Fixing 429 Error (Rate Limit Error)
-
-429 means:
-
-Too many API requests
-
-API quota exceeded
-
-Free tier limit hit
-
-Fix 1: Add Rate Limiter on Backend
-
-In server.js:
-
-import rateLimit from "express-rate-limit";
-
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10
-});
-
-app.use(limiter);
-
-Fix 2: Add Retry Delay in AI Call
-await new Promise(resolve => setTimeout(resolve, 1500));
-
-Fix 3: Upgrade AI API Plan
-
-Free tiers usually allow:
-
-5–15 requests per minute
-
-Fix 4: Cache Responses
-
-Store repeated physics problems in memory:
-
-const cache = {};
-if (cache[text]) return cache[text];
-
-🔌 API Flow
-
-Frontend (App.jsx)
-⬇
-POST /api/parse
-⬇
-Backend (Express)
-⬇
-AI API
-⬇
-Structured JSON
-⬇
-Simulation Engine
-
-🧪 Testing Backend Only
-
-Open:
-
-http://localhost:3000/index.html
-
-
-That is only for testing backend.
-
-NOT the real app.
-
-🌟 Features
-
-AI-based parameter extraction
-
-Realistic collision simulation
-
-Elastic & inelastic physics
-
-JSON-based architecture
-
-Clerk authentication
-
-Modular simulation engine
-
-Production-ready structure
-
-🛠 Common Errors & Fixes
-❌ 429 Too Many Requests
-
-→ Reduce request frequency
-→ Add rate limit
-→ Upgrade API plan
-
-❌ CORS Error
-
-→ Add:
-
-app.use(cors());
-
-❌ Undefined API URL
-
-→ Check VITE_API_URL in frontend .env
-
-🧑‍💻 Team
-
-Strawhat Devs
-
-Karthik
-
-Sai
-
-Phani
-
-Siddish
+```
+*   Create a `.env` file in the root directory:
+    ```env
+    VITE_CLERK_PUBLISHABLE_KEY=your_clerk_pub_key
+    ```
+*   Start the frontend:
+    ```bash
+    npm run dev
+    ```
+
+---
+
+## 🚀 How to Use
+
+1.  **Sign In**: Authenticate using the Clerk-powered login.
+2.  **Select a Topic**: Use the dropdown to choose your physics domain (e.g., Collisions).
+3.  **Describe a Problem**: Type a scenario like: *"A 5kg ball moving at 10m/s hits a 2kg ball at rest elastically"* or click **Load Example**.
+4.  **Visualize**: Click **Update Simulation** to see the AI generate the world.
+5.  **Interact**: Use sliders to tweak parameters in real-time without stopping the clock.
+
+---
+
+## 📂 Architecture
+
+*   `server/`: Express backend with global error handling and request timeouts (20s).
+*   `src/simulation-engine/`: Modular physics simulations (Collisions, Optics, Incline, etc.).
+*   `src/simulation-engine/simulation-core.js`: Core math and rendering primitives.
+*   `src/components/RightPanel.jsx`: Main UI/Canvas bridge.
+
+---
+
+## 🧑‍💻 Team: Strawhat Devs
+*   **Karthik**
+*   **Sai**
+*   **Phani**
+*   **Siddish**

@@ -76,7 +76,11 @@ export function simulateCollisions(params, sim) {
             const dx = this.p2.x - this.p1.x;
             const dy = this.p2.y - this.p1.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (this.r1 + this.r2) / 10; // Normalized world units
+
+            // Correct minDist calculation using the camera scale
+            const cam = getCamera();
+            const s = cam.unitScale || 40;
+            const minDist = (this.r1 + this.r2) / s;
 
             if (dist <= minDist) {
                 this.resolveCollision(dx, dy, dist, minDist);

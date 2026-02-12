@@ -61,6 +61,7 @@ const PARAM_CONFIG = {
     { key: 'velocity1', label: 'Velocity 1', unit: 'm/s', min: -50, max: 50, step: 1 },
     { key: 'mass2', label: 'Mass 2', unit: 'kg', min: 0.1, max: 50, step: 0.1 },
     { key: 'velocity2', label: 'Velocity 2', unit: 'm/s', min: -50, max: 50, step: 1 },
+    { key: 'elasticity', label: 'Elasticity (e)', unit: '', min: 0, max: 1, step: 0.01 },
   ],
   optics: [
     { key: 'focalLength', label: 'Focal Length (cm)', unit: 'cm', min: -100, max: 100, step: 1 },

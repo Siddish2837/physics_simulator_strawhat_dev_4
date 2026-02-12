@@ -138,8 +138,19 @@ function buildEngineParams(params, topic) {
     if (p.objectDistance != null) { p.optics = p.optics || {}; p.optics.object_distance = p.objectDistance; }
     if (p.electricField != null) { p.electricity = p.electricity || {}; p.electricity.electric_field = p.electricField; }
     if (p.magneticField != null) { p.magnetism = p.magnetism || {}; p.magnetism.magnetic_field = p.magneticField; }
-    if (p.mass1 != null && p.collision) { p.collision.masses = [p.mass1, p.mass2]; } // Example map
-    if (p.velocity1 != null && p.collision) { p.collision.velocities_before = [p.velocity1, p.velocity2]; }
+    if (p.mass1 != null) {
+        p.collision = p.collision || {};
+        p.collision.masses = [p.mass1, p.mass2 ?? 1];
+    }
+    if (p.velocity1 != null) {
+        p.collision = p.collision || {};
+        p.collision.velocities_before = [p.velocity1, p.velocity2 ?? 0];
+    }
+
+    if (p.elasticity != null) {
+        p.collision = p.collision || {};
+        p.collision.coefficient_of_restitution = p.elasticity;
+    }
 
     return p;
 }

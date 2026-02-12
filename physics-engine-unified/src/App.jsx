@@ -104,6 +104,12 @@ function App() {
     };
 
     const handleChatGenerate = async (prompt, topicOverride) => {
+        // Debounce/Lock: Prevent double-calling if already in progress
+        if (isSimulating) {
+            console.warn('[App] Simulation analysis already in progress. Ignoring request.');
+            return;
+        }
+
         setInputProblem(prompt)
         if (topicOverride) setSelectedTopic(topicOverride);
 

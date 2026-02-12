@@ -6,14 +6,10 @@ import fetch from 'node-fetch';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL = 'gemini-2.0-flash';
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 
 /**
  * Express route handler: POST /api/ai
- *
- * Accepts the exact same payload the frontend ai.js sends,
- * forwards it to the Gemini API with the server-side API key,
- * and returns the raw Gemini response to the frontend.
  */
 export async function handleAIRequest(req, res) {
     const apiKey = process.env.API_KEY;
@@ -48,11 +44,11 @@ export async function handleAIRequest(req, res) {
 
             clearTimeout(timeoutId);
 
-            // ---- Handle rate limiting with exponential backoff ----
+            // ---- Handle rate limiting with exponential backoff + jitter ----
             if (geminiRes.status === 429 && attempt < MAX_RETRIES) {
                 retries++;
                 const delay = getRetryDelay(geminiRes, attempt);
-                console.warn(`[aiProxy] 429 from Gemini. Retry ${attempt}/${MAX_RETRIES} in ${delay}ms...`);
+                console.warn(`[aiProxy] 429 Rate Limit. Attempt ${attempt}/${MAX_RETRIES}. Retrying in ${delay}ms...`);
                 await sleep(delay);
                 continue;
             }
@@ -67,7 +63,7 @@ export async function handleAIRequest(req, res) {
                 });
             }
 
-            // ---- Success: forward Gemini response as-is ----
+            // ---- Success ----
             const data = await geminiRes.json();
             res.locals.retries = retries;
             return res.json(data);
@@ -76,8 +72,9 @@ export async function handleAIRequest(req, res) {
             lastError = err;
             retries++;
             if (attempt < MAX_RETRIES) {
-                const delay = Math.pow(2, attempt) * 1000;
-                console.warn(`[aiProxy] Network error. Retry ${attempt}/${MAX_RETRIES} in ${delay}ms...`);
+                // Network error backoff
+                const delay = Math.pow(2, attempt) * 1000 + (Math.random() * 500);
+                console.warn(`[aiProxy] Network error. Attempt ${attempt}/${MAX_RETRIES}. Retrying in ${Math.round(delay)}ms...`);
                 await sleep(delay);
             }
         }
@@ -86,8 +83,8 @@ export async function handleAIRequest(req, res) {
     // All retries exhausted
     res.locals.retries = retries;
     return res.status(502).json({
-        error: 'Failed to reach Gemini API after multiple retries.',
-        detail: lastError?.message || 'Unknown error'
+        error: 'Gemini API limit reached or network failure after multiple retries. Please wait a moment and try again.',
+        detail: lastError?.message || 'Rate limit exhausted'
     });
 }
 
@@ -98,13 +95,17 @@ function sleep(ms) {
 }
 
 function getRetryDelay(response, attempt) {
-    const fallback = Math.pow(2, attempt) * 1000;
+    let delay = Math.pow(2, attempt) * 1000; // Base: 2s, 4s, 8s, 16s...
+
+    // Check for Retry-After header
     const retryAfter = response.headers?.get?.('retry-after');
     if (retryAfter) {
         const seconds = parseInt(retryAfter, 10);
-        if (!isNaN(seconds)) return seconds * 1000;
+        if (!isNaN(seconds)) delay = seconds * 1000;
     }
-    return fallback;
+
+    // Add randomized jitter (0-1s) to prevent thundering herd
+    return delay + (Math.random() * 1000);
 }
 
 function safeParseJSON(text) {
