@@ -2,7 +2,7 @@
 // optics-sim.js — Premium ray/lens diagrams with auto-scaling
 // ============================================================
 
-import { drawLine, drawArrow, drawDot, drawHUD, getCamera } from './simulation-core.js';
+import { drawLine, drawArrow, drawDot, drawHUD, getCamera, formatLength } from './simulation-core.js';
 
 export function simulateOptics(params, sim) {
     const type = (params.optics?.type || params.sub_topic || 'refraction').toLowerCase();
@@ -171,13 +171,13 @@ function lensSimulation(params, sim) {
             ctx.setLineDash([2, 3]);
             drawLine(ctx, objMarkX, cy + 40, cx, cy + 40, 'rgba(78,205,196,0.2)', 1);
             ctx.setLineDash([]);
-            ctx.fillText(`dₒ = ${dO}`, (objMarkX + cx) / 2 - 15, cy + 55);
+            ctx.fillText(`dₒ = ${formatLength(dO)}`, (objMarkX + cx) / 2 - 15, cy + 55);
             // dI bracket
             ctx.setLineDash([2, 3]);
             drawLine(ctx, cx, cy + 40, imgMarkX, cy + 40, 'rgba(224,86,253,0.2)', 1);
             ctx.setLineDash([]);
             ctx.fillStyle = 'rgba(224,86,253,0.4)';
-            ctx.fillText(`dᵢ = ${dI.toFixed(1)}`, (cx + imgMarkX) / 2 - 15, cy + 55);
+            ctx.fillText(`dᵢ = ${formatLength(dI)}`, (cx + imgMarkX) / 2 - 15, cy + 55);
             ctx.restore();
 
             // Object
@@ -225,7 +225,7 @@ function lensSimulation(params, sim) {
 
             drawHUD(ctx, [
                 `Thin Lens — 1/f = 1/dₒ + 1/dᵢ`,
-                `f = ${f}   dₒ = ${dO}   dᵢ = ${dI.toFixed(1)}`,
+                `f = ${formatLength(f)}   dₒ = ${formatLength(dO)}   dᵢ = ${formatLength(dI)}`,
                 `M = −dᵢ/dₒ = ${mag.toFixed(2)}`,
                 mag < 0 ? `Image: real, inverted` : `Image: virtual, upright`,
             ]);

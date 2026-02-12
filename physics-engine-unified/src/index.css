@@ -1,0 +1,217 @@
+:root {
+  /* Default Dark Theme (Nebula) */
+  --bg-primary: #0f172a;
+  --bg-primary-rgb: 15, 23, 42;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --accent-primary: #8b5cf6;
+  /* Violet-500 for Nebula */
+  --accent-hover: #7c3aed;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+[data-theme='light'] {
+  /* Light Theme (Warm Violet) */
+  --bg-primary: #faf5ff;
+  --bg-primary-rgb: 250, 245, 255;
+  /* Very light lavender */
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3e8ff;
+  /* Light purple tint */
+  --accent-primary: #7c3aed;
+  /* Violet-600 — vibrant */
+  --accent-hover: #6d28d9;
+  /* Violet-700 */
+  --text-primary: #1e1b4b;
+  /* Indigo-950 — rich dark */
+  --text-secondary: #6b7280;
+  /* Gray-500 */
+  --border-color: #e5e7eb;
+  /* Gray-200 — soft */
+  --shadow-sm: 0 1px 3px 0 rgb(124 58 237 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(124 58 237 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  /* Set base color here */
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow: hidden;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* fallback for older browsers */
+  height: 100dvh;
+  /* accounts for browser/OS chrome */
+  max-height: 100dvh;
+  position: relative;
+  /* Context for absolute/fixed children */
+  z-index: 1;
+}
+
+.gradient-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  /* Behind content, above bg animation */
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+      rgba(15, 23, 42, 0.9) 0%,
+      rgba(15, 23, 42, 0.4) 100%);
+  /* Adjust for light mode via CSS var if needed, or just let light mode override */
+}
+
+[data-theme='light'] .gradient-overlay {
+  background: linear-gradient(180deg,
+      rgba(250, 245, 255, 0.6) 0%,
+      rgba(250, 245, 255, 0.2) 50%,
+      rgba(250, 245, 255, 0.1) 100%);
+}
+
+.glass-panel {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.06);
+}
+
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  /* Above overlay */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Utilities */
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.25s;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-primary);
+}
+
+/* Ensure nice scrolling in dark/light */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Clerk UserButton - make username text visible in both themes */
+.cl-userButtonBox {
+  color: var(--text-primary) !important;
+}
+
+.cl-userButtonOuterIdentifier {
+  color: var(--text-primary) !important;
+}
+
+/* Loader Animation */
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(139, 92, 246, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--accent-primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ensure any Clerk text inside header uses theme colors */
+header .cl-internal-b3fm6y,
+header .cl-userButtonBox span,
+header [class*="cl-userButton"] span {
+  color: var(--text-primary) !important;
+}

@@ -2,7 +2,7 @@
 // collisions-sim.js — Premium collision visualization
 // ============================================================
 
-import { drawDot, drawArrow, drawLine, drawGround, drawHUD, getCamera } from './simulation-core.js';
+import { drawDot, drawArrow, drawLine, drawGround, drawHUD, getCamera, formatLength } from './simulation-core.js';
 
 export function simulateCollisions(params, sim) {
     const type = params.collision?.type || 'elastic';
@@ -87,8 +87,8 @@ export function simulateCollisions(params, sim) {
             // Fixed length arrow scaling
             const aScale = 30 / (Math.max(Math.abs(u1), Math.abs(u2), 1));
 
-            drawArrow(ctx, cx1, cy + r1 + 10, cx1 + currentV1 * aScale, cy + r1 + 10, '#4ecdc4', `${currentV1.toFixed(1)}`);
-            drawArrow(ctx, cx2, cy + r2 + 10, cx2 + currentV2 * aScale, cy + r2 + 10, '#ff9f43', `${currentV2.toFixed(1)}`);
+            drawArrow(ctx, cx1, cy + r1 + 10, cx1 + currentV1 * aScale, cy + r1 + 10, '#4ecdc4', `${formatLength(currentV1)}/s`);
+            drawArrow(ctx, cx2, cy + r2 + 10, cx2 + currentV2 * aScale, cy + r2 + 10, '#ff9f43', `${formatLength(currentV2)}/s`);
 
             // Flash
             if (Math.abs(this.t - collisionTime) < 0.1) {
@@ -104,8 +104,8 @@ export function simulateCollisions(params, sim) {
 
             drawHUD(ctx, [
                 `${type.charAt(0).toUpperCase() + type.slice(1)} Collision`,
-                `m₁=${m1}kg  v₁=${currentV1.toFixed(2)} ${cam.unitLabel}/s`,
-                `m₂=${m2}kg  v₂=${currentV2.toFixed(2)} ${cam.unitLabel}/s`,
+                `m₁=${m1}kg  v₁=${formatLength(currentV1)}/s`,
+                `m₂=${m2}kg  v₂=${formatLength(currentV2)}/s`,
                 this.phase === 'before' ? `Approaching...` : `Separating...`,
             ]);
         }

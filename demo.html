@@ -168,6 +168,25 @@
         <button class="btn-preset" data-preset="collision">💥 Collision</button>
         <button class="btn-preset" data-preset="electric">🔌 Electric Field</button>
         <button class="btn-preset" data-preset="magnetic">🧲 Magnetic Field</button>
+        <button class="btn-preset" data-preset="friction">🧱 Friction</button>
+        <button class="btn-preset" data-preset="incline">⛰️ Incline</button>
+        <button class="btn-preset" data-preset="fluid">🌊 Fluid Flow</button>
+        <button class="btn-preset" data-preset="lift_preset">✈️ Lift</button>
+        <button class="btn-preset" data-preset="mag_advanced">⚡ Lorentz</button>
+        <button class="btn-preset" data-preset="spring">🔩 Spring</button>
+        <button class="btn-preset" data-preset="pulley">⚙️ Pulley</button>
+        <button class="btn-preset" data-preset="gravity">🪐 Orbits</button>
+        <button class="btn-preset" data-preset="thermo">🌡️ Thermo</button>
+        <button class="btn-preset" data-preset="elasticity">📏 Elasticity</button>
+    </div>
+
+    <div class="presets">
+        <strong style="color:#888; font-size:11px; margin-right:8px;">Composite:</strong>
+        <button class="btn-preset" data-preset="proj_incline">🎯 Projectile+Incline</button>
+        <button class="btn-preset" data-preset="spring_fric">🔩 Spring+Friction</button>
+        <button class="btn-preset" data-preset="pulley_spr">⚙️ Pulley+Spring</button>
+        <button class="btn-preset" data-preset="multi_pulley">⚙️ Multi-Pulley</button>
+        <button class="btn-preset" data-preset="pulley_multi_mass">⚙️ Multi-Mass Pulley</button>
     </div>
 
     <div class="controls">
@@ -203,7 +222,10 @@
         import { extractParameters } from './ai.js';
         import { normalizeParams } from './parser.js';
         import { attachComputedValues } from './formula-engine.js';
-        import { initSimulation, load, start, stop, reset, getObjects } from './simulation-engine/simulation-core.js';
+        import {
+            initSimulation, load, start, stop, reset, getObjects,
+            setZoom, getCamera, resetView, setUnit, drawRoundRect
+        } from './simulation-engine/simulation-core.js';
         import { initTooltip } from './simulation-engine/tooltip.js';
 
         import { simulateLinearMotion } from './simulation-engine/motion-sim.js';
@@ -215,6 +237,23 @@
         import { simulateCollisions } from './simulation-engine/collisions-sim.js';
         import { simulateFields } from './simulation-engine/fields-sim.js';
 
+        import { simulateFriction } from './simulation-engine/friction-sim.js';
+        import { simulateIncline } from './simulation-engine/incline-sim.js';
+        import { simulateFluid } from './simulation-engine/fluid-sim.js';
+        import { simulateLift } from './simulation-engine/lift-sim.js';
+        import { simulateMagnetismAdvanced } from './simulation-engine/magnetism-advanced-sim.js';
+        import { simulateSpring } from './simulation-engine/spring-sim.js';
+        import { simulatePulley } from './simulation-engine/pulley-sim.js';
+        import { simulateGravity } from './simulation-engine/gravity-sim.js';
+        import { simulateThermo } from './simulation-engine/thermo-sim.js';
+        import { simulateElasticity } from './simulation-engine/elasticity-sim.js';
+
+        // Composite simulations
+        import { simulateProjectileIncline } from './simulation-engine/projectile-incline-sim.js';
+        import { simulateSpringFriction } from './simulation-engine/spring-friction-sim.js';
+        import { simulatePulleySpring } from './simulation-engine/pulley-spring-sim.js';
+        import { simulateMultiPulley } from './simulation-engine/multi-pulley-sim.js';
+
         // Sim map
         const SIM_MAP = {
             linear_motion: simulateLinearMotion,
@@ -225,7 +264,21 @@
             energy: simulateEnergy,
             collision: simulateCollisions,
             electricity: simulateFields,
-            magnetism: simulateFields
+            magnetism: simulateFields,
+            friction: simulateFriction,
+            inclined_plane: simulateIncline,
+            fluid_dynamics: simulateFluid,
+            lift: simulateLift,
+            magnetism_advanced: simulateMagnetismAdvanced,
+            spring: simulateSpring,
+            pulley: simulatePulley,
+            gravitation: simulateGravity,
+            thermodynamics: simulateThermo,
+            elasticity: simulateElasticity,
+            projectile_incline: simulateProjectileIncline,
+            spring_friction: simulateSpringFriction,
+            pulley_spring: simulatePulleySpring,
+            multi_pulley: simulateMultiPulley
         };
 
         // Presets (offline fallback)
@@ -295,6 +348,108 @@
                 magnetism: { magnetic_field: 0.5, force_on_charge: null, induced_emf: null },
                 mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
                 formulas: { equations: ['B = μ₀I/(2πr)', 'F = qvB'], calculations: { magnetic_field: 0.5 } }
+            },
+            friction: {
+                topic: 'friction', sub_topic: 'kinetic', object: 'Block',
+                mass: 5, gravity: 9.8,
+                friction: { static_coefficient: 0.5, kinetic_coefficient: 0.3 },
+                forces: { applied: 30 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['f_s = μ_s·N', 'f_k = μ_k·N'], calculations: { normal_force: 49, kinetic_friction: 14.7 } }
+            },
+            incline: {
+                topic: 'inclined_plane', sub_topic: 'sliding', object: 'Block',
+                mass: 5, gravity: 9.8, launch_angle: 30,
+                incline: { angle: 30 },
+                friction: { kinetic_coefficient: 0.1 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['F∥=mg·sin(θ)', 'N=mg·cos(θ)'], calculations: { parallel_force: 24.5, normal_force: 42.4 } }
+            },
+            fluid: {
+                topic: 'fluid_dynamics', sub_topic: 'bernoulli', object: 'Fluid',
+                fluid: { density: 1000, area1: 0.05, area2: 0.02, velocity1: 2, pressure1: 101325, height1: 0, height2: 0 },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['A₁v₁=A₂v₂', 'P+½ρv²+ρgh=const'], calculations: { velocity2: 5 } }
+            },
+            lift_preset: {
+                topic: 'lift', sub_topic: 'bernoulli_lift', object: 'Wing',
+                fluid: { density: 1.225 },
+                lift: { velocity_top: 60, velocity_bottom: 45, wing_area: 20 },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['F_lift=ΔP×A', 'ΔP=½ρ(v_b²−v_t²)'], calculations: { lift_force: 16538 } }
+            },
+            mag_advanced: {
+                topic: 'magnetism_advanced', sub_topic: 'lorentz_force', object: 'Electron',
+                magnetism: { magnetic_field: 0.5 },
+                electricity: { charge: 1.6e-19 },
+                mass: 9.11e-31,
+                initial_velocity: { magnitude: 1e6, direction: 'perpendicular' },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['F=qvB', 'r=mv/qB'], calculations: { lorentz_force: 8e-14 } }
+            },
+            spring: {
+                topic: 'spring', sub_topic: 'shm', object: 'Mass',
+                mass: 2, gravity: 9.8,
+                spring: { constant: 50, displacement: 1.5, damping: 0 },
+                energy: { spring_constant: 50 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['F=-kx', 'PE=½kx²', 'ω=√(k/m)'], calculations: { period: 1.26 } }
+            },
+            pulley: {
+                topic: 'pulley', sub_topic: 'atwood', object: 'Pulley System',
+                pulley: { mass1: 10, mass2: 5, spring_coupled: false },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['a=(m₁−m₂)g/(m₁+m₂)', 'T=2m₁m₂g/(m₁+m₂)'], calculations: { acceleration: 3.27, tension: 65.3 } }
+            },
+            gravity: {
+                topic: 'gravitation', sub_topic: 'orbital', object: 'Planet',
+                gravitation: { central_mass: 1.989e30, orbital_radius: 1.496e11 },
+                mass: 5.972e24, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['F=GMm/r²', 'v=√(GM/r)'], calculations: { orbital_velocity: 29783 } }
+            },
+            thermo: {
+                topic: 'thermodynamics', sub_topic: 'ideal_gas', object: 'Gas',
+                thermodynamics: { temperature_initial: 300, temperature_final: 500, pressure: 101325, moles: 1, specific_heat: 1000 },
+                mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['PV=nRT', 'Q=mcΔT'], calculations: { heat_transfer: 200000 } }
+            },
+            elasticity: {
+                topic: 'elasticity', sub_topic: 'youngs_modulus', object: 'Steel Bar',
+                forces: { applied: 5000 },
+                elasticity: { area: 0.01, original_length: 2, youngs_modulus: 2e11 },
+                mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['σ=F/A', 'ε=σ/E', 'ΔL=εL₀'], calculations: { stress: 500000, strain: 2.5e-6 } }
+            },
+            proj_incline: {
+                topic: 'projectile_incline', sub_topic: 'bounce', object: 'Ball',
+                mass: 1, gravity: 9.8,
+                initial_velocity: { magnitude: 20 },
+                launch_angle: 25,
+                incline: { angle: 45 },
+                collision: { coefficient_of_restitution: 0.7 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['v₀ₓ=v₀·cos(θ)', 'Bounce: v\'=e·v'], calculations: { initial_vx: 18.1, initial_vy: 8.5 } }
+            },
+            spring_fric: {
+                topic: 'spring_friction', sub_topic: 'damped_oscillation', object: 'Block',
+                mass: 2, gravity: 9.8,
+                spring: { constant: 50, displacement: 1.5 },
+                friction: { kinetic_coefficient: 0.15 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['ω₀=√(k/m)', 'f_friction=μ_k·mg'], calculations: { natural_frequency: 5, friction_force: 2.94 } }
+            },
+            pulley_spr: {
+                topic: 'pulley_spring', sub_topic: 'oscillating_masses', object: 'Atwood+Spring',
+                mass: 1, gravity: 9.8,
+                pulley: { mass1: 10, mass2: 5, spring_coupled: true, spring_constant: 20 },
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['m_eff=(m₁·m₂)/(m₁+m₂)', 'T=2π/ω'], calculations: { effective_mass: 3.33, period: 2.57 } }
+            },
+            pulley_multi_mass: {
+                topic: 'pulley', sub_topic: 'atwood_multi', object: 'Pulley System',
+                pulley: { masses_left: [5, 3, 2], masses_right: [4, 4], spring_coupled: false },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['a=(Σm₁−Σm₂)g/(Σm₁+Σm₂)'], calculations: { total_m1: 10, total_m2: 8, acceleration: 1.09 } }
             }
         };
 
@@ -332,6 +487,11 @@
             });
         });
 
+        // Unit selector
+        document.getElementById('unitSelect').addEventListener('change', (e) => {
+            setUnit(e.target.value);
+        });
+
         // ======= INPUT VALIDATION =======
         const PHYSICS_KEYWORDS = [
             'velocity', 'speed', 'acceleration', 'force', 'mass', 'gravity',
@@ -349,6 +509,16 @@
             'angle', 'degree', 'm/s', 'km/h', 'kg', 'meter', 'displacement',
             'height', 'distance', 'fall', 'drop', 'rise', 'incline', 'slope',
             'pressure', 'density', 'buoyancy', 'fluid', 'torque', 'lever',
+            'friction', 'coefficient', 'rough', 'smooth', 'surface', 'sliding', 'static',
+            'incline', 'slope', 'ramp', 'hill',
+            'bernoulli', 'pipe', 'flow', 'continuity',
+            'lift', 'wing', 'airfoil', 'aerodynamic', 'airplane', 'fly',
+            'lorentz', 'cyclotron', 'electron', 'proton',
+            'spring', 'hooke', 'oscillation', 'elastic', 'restoring',
+            'pulley', 'rope', 'atwood', 'tension',
+            'orbit', 'planet', 'satellite', 'solar', 'gravitation', 'kepler',
+            'temperature', 'heat', 'gas', 'mole', 'ideal gas', 'piston', 'thermal',
+            'stress', 'strain', 'modulus', 'deformation', 'stretch', 'young',
         ];
 
         function isPhysicsInput(text) {
@@ -358,13 +528,40 @@
 
         function detectPreset(text) {
             const input = text.toLowerCase();
-            if (input.includes('wave') || input.includes('oscillat') || input.includes('frequency') || input.includes('amplitude')) return 'wave';
+
+            // Composite topics — check FIRST (highest priority)
+            if ((input.includes('projectile') || input.includes('throw') || input.includes('ball')) &&
+                (input.includes('incline') || input.includes('slope') || input.includes('ramp')) &&
+                (input.includes('bounce') || input.includes('hit') || input.includes('onto'))) return 'proj_incline';
+
+            if ((input.includes('spring') || input.includes('oscillat')) &&
+                (input.includes('friction') || input.includes('damp'))) return 'spring_fric';
+
+            if ((input.includes('pulley') || input.includes('atwood')) &&
+                (input.includes('spring'))) return 'pulley_spr';
+
+            // Single topics
+            if ((input.includes('wave') && !input.includes('microwave')) || input.includes('frequency') || input.includes('amplitude') || input.includes('wavelength')) return 'wave';
             if (input.includes('lens') || input.includes('mirror') || input.includes('focal')) return 'optics';
             if (input.includes('refract') || input.includes('snell') || input.includes('prism')) return 'optics_ray';
-            if (input.includes('circular') || input.includes('orbit') || input.includes('angular') || input.includes('revolv') || input.includes('centripetal')) return 'circular';
-            if (input.includes('energy') || input.includes('kinetic') || input.includes('potential') || input.includes('joule')) return 'energy';
-            if (input.includes('collision') || input.includes('elastic') || input.includes('inelastic') || input.includes('momentum')) return 'collision';
+            if (input.includes('collision') || input.includes('inelastic') || input.includes('momentum')) return 'collision';
             if (input.includes('electric') || input.includes('charge') || input.includes('coulomb') || input.includes('voltage')) return 'electric';
+
+            // New topics — check BEFORE projectile/energy (which catch generic words like 'angle', 'energy')
+            if (input.includes('spring') || input.includes('hooke') || input.includes('oscillat') || input.includes('shm') || input.includes('simple harmonic')) return 'spring';
+            if (input.includes('incline') || input.includes('slope') || input.includes('ramp')) return 'incline';
+            if ((input.includes('friction') || input.includes('rough') || input.includes('coefficient')) && !input.includes('frictionless')) return 'friction';
+            if (input.includes('pulley') || input.includes('atwood')) return 'pulley';
+            if (input.includes('bernoulli') || input.includes('pipe') || input.includes('flow') || input.includes('continuity')) return 'fluid';
+            if (input.includes('lift') || input.includes('wing') || input.includes('airfoil') || input.includes('airplane')) return 'lift_preset';
+            if (input.includes('lorentz') || input.includes('cyclotron')) return 'mag_advanced';
+            if (input.includes('orbit') || input.includes('planet') || input.includes('solar') || input.includes('kepler')) return 'gravity';
+            if (input.includes('temperature') || input.includes('heat') || input.includes('gas law') || input.includes('piston') || input.includes('thermal')) return 'thermo';
+            if (input.includes('stress') || input.includes('strain') || input.includes('modulus') || input.includes('young') || input.includes('stretch')) return 'elasticity';
+
+            // Generic matches after specific ones
+            if (input.includes('circular') || input.includes('angular') || input.includes('revolv') || input.includes('centripetal')) return 'circular';
+            if (input.includes('energy') || input.includes('kinetic') || input.includes('potential') || input.includes('joule')) return 'energy';
             if (input.includes('magnet') || input.includes('tesla') || input.includes('solenoid')) return 'magnetic';
             if (input.includes('linear') && input.includes('motion')) return 'linear';
             if ((input.includes('car') || input.includes('vehicle') || input.includes('train')) && (input.includes('accelerat') || input.includes('speed') || input.includes('velocity'))) return 'linear';
@@ -450,13 +647,48 @@
             runBtn.textContent = '⏳ Analyzing...';
             statusInfo.textContent = '🔄 Sending to AI engine...';
 
+            // New topics that the AI may misclassify
+            const NEW_TOPICS = ['friction', 'inclined_plane', 'fluid_dynamics', 'lift',
+                'magnetism_advanced', 'spring', 'pulley', 'gravitation', 'elasticity'];
+
+            // Preset key mapping (some presets have different keys than topic names)
+            const TOPIC_TO_PRESET = {
+                'friction': 'friction',
+                'inclined_plane': 'incline',
+                'fluid_dynamics': 'fluid',
+                'lift': 'lift_preset',
+                'magnetism_advanced': 'mag_advanced',
+                'spring': 'spring',
+                'pulley': 'pulley',
+                'gravitation': 'gravity',
+                'elasticity': 'elasticity'
+            };
+
+            // Pre-check: does keyword detection match a new topic?
+            const keywordMatch = detectPreset(inputText);
+
             try {
-                // 1. Call the real AI engine (Gemini via backend proxy)
+                // ALWAYS call the AI to extract parameters (we need the actual values!)
                 const rawParams = await extractParameters(inputText);
 
-                // Validate the AI response has a valid topic
+                // If keyword detection found a new topic, override the AI's topic choice
+                // (AI often misclassifies new topics as 'energy', 'forces', etc.)
+                if (keywordMatch && TOPIC_TO_PRESET[rawParams.topic] !== keywordMatch) {
+                    // Check if keyword match corresponds to a new topic
+                    const matchedTopic = Object.keys(TOPIC_TO_PRESET).find(
+                        topic => TOPIC_TO_PRESET[topic] === keywordMatch
+                    );
+
+                    if (matchedTopic && NEW_TOPICS.includes(matchedTopic)) {
+                        console.log(`[Override] AI said "${rawParams.topic}", keyword detection says "${matchedTopic}"`);
+                        rawParams.topic = matchedTopic;
+                        statusInfo.textContent = `✅ Corrected topic to ${matchedTopic}`;
+                    }
+                }
+
+                // Validate the final topic
                 if (!rawParams.topic || !SIM_MAP[rawParams.topic]) {
-                    throw new Error(`AI returned unknown topic: ${rawParams.topic}`);
+                    throw new Error(`Unknown topic: ${rawParams.topic}`);
                 }
 
                 statusInfo.textContent = '✅ AI extracted params — starting simulation';
@@ -468,7 +700,7 @@
                 // Fallback: keyword-match to a preset (only if physics)
                 const preset = detectPreset(inputText);
                 if (preset) {
-                    statusInfo.textContent = '🟡 API unavailable — using keyword match';
+                    statusInfo.textContent = '🟡 AI unavailable — using keyword match';
                     runSimulation(PRESETS[preset]);
                 } else {
                     statusInfo.textContent = '❌ Could not determine simulation type';
@@ -496,7 +728,6 @@
         });
 
         // View Controls
-        import { setZoom, getCamera, resetView, setUnit } from './simulation-engine/simulation-core.js';
 
         document.getElementById('zoomInBtn').addEventListener('click', () => {
             const cam = getCamera();

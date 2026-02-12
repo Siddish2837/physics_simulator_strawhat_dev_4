@@ -51,6 +51,19 @@ export function routeToSimulation(params) {
         case 'magnetism': return stub('magnetism', params);
         case 'thermodynamics': return stub('thermodynamics', params);
         case 'relativity': return stub('relativity', params);
+        case 'friction': return stub('friction', params);
+        case 'inclined_plane': return stub('inclined_plane', params);
+        case 'fluid_dynamics': return stub('fluid_dynamics', params);
+        case 'lift': return stub('lift', params);
+        case 'magnetism_advanced': return stub('magnetism_advanced', params);
+        case 'spring': return stub('spring', params);
+        case 'pulley': return stub('pulley', params);
+        case 'gravitation': return stub('gravitation', params);
+        case 'elasticity': return stub('elasticity', params);
+        case 'projectile_incline': return stub('projectile_incline', params);
+        case 'spring_friction': return stub('spring_friction', params);
+        case 'pulley_spring': return stub('pulley_spring', params);
+        case 'multi_pulley': return stub('multi_pulley', params);
         default:
             console.error(`[router] Unknown topic: "${topic}"`);
             return { success: false, error: `Unknown topic: "${topic}"`, params };

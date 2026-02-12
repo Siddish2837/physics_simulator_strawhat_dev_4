@@ -202,5 +202,193 @@ const TOPIC_COMPUTERS = {
             if (n(p.distance)) { calc(p, 'length_contraction', p.distance / gamma); if (!n(p.relativity?.length_contraction)) p.relativity.length_contraction = r(p.distance / gamma); }
             if (n(p.mass)) calc(p, 'rest_energy', p.mass * c * c);
         }
+    },
+
+    friction(p) {
+        const m = p.mass || 1, g = p.gravity || 9.8;
+        const mu_s = p.friction?.static_coefficient, mu_k = p.friction?.kinetic_coefficient;
+        const N_force = m * g;
+        eq(p, 'f_s = μ_s·N'); eq(p, 'f_k = μ_k·N'); eq(p, 'N = mg');
+        calc(p, 'normal_force', N_force);
+        if (n(mu_s)) calc(p, 'max_static_friction', mu_s * N_force);
+        if (n(mu_k)) calc(p, 'kinetic_friction', mu_k * N_force);
+        if (n(p.forces?.applied) && n(mu_k)) {
+            const net = p.forces.applied - mu_k * N_force;
+            calc(p, 'net_force', net);
+            calc(p, 'acceleration', net / m);
+        }
+    },
+
+    inclined_plane(p) {
+        const m = p.mass || 1, g = p.gravity || 9.8;
+        const theta = p.incline?.angle || p.launch_angle || 30;
+        const mu = p.friction?.kinetic_coefficient || 0;
+        const W = m * g, rr = rad(theta);
+        eq(p, 'F∥ = mg·sin(θ)'); eq(p, 'N = mg·cos(θ)'); eq(p, 'f = μN');
+        const Fpar = W * Math.sin(rr), Norm = W * Math.cos(rr), Ffric = mu * Norm;
+        calc(p, 'parallel_force', Fpar);
+        calc(p, 'normal_force', Norm);
+        calc(p, 'friction_force', Ffric);
+        calc(p, 'net_force', Fpar - Ffric);
+        calc(p, 'acceleration', (Fpar - Ffric) / m);
+    },
+
+    fluid_dynamics(p) {
+        const rho = p.fluid?.density || 1000;
+        const A1 = p.fluid?.area1, A2 = p.fluid?.area2, v1 = p.fluid?.velocity1;
+        const g = p.gravity || 9.8;
+        eq(p, 'A₁v₁ = A₂v₂'); eq(p, 'P + ½ρv² + ρgh = const');
+        if (n(A1) && n(A2) && n(v1) && A2 !== 0) {
+            const v2 = (A1 * v1) / A2;
+            calc(p, 'velocity2', v2);
+            const P1 = p.fluid?.pressure1 || 101325;
+            const h1 = p.fluid?.height1 || 0, h2 = p.fluid?.height2 || 0;
+            const P2 = P1 + 0.5 * rho * (v1 * v1 - v2 * v2) + rho * g * (h1 - h2);
+            calc(p, 'pressure2', P2);
+        }
+    },
+
+    lift(p) {
+        const rho = p.fluid?.density || 1.225;
+        const v_t = p.lift?.velocity_top, v_b = p.lift?.velocity_bottom;
+        const area = p.lift?.wing_area;
+        eq(p, 'F_lift = ΔP × A'); eq(p, 'ΔP = ½ρ(v_b² - v_t²)');
+        if (n(v_t) && n(v_b) && n(area)) {
+            const dP = 0.5 * rho * (v_b * v_b - v_t * v_t);
+            calc(p, 'pressure_difference', Math.abs(dP));
+            calc(p, 'lift_force', Math.abs(dP) * area);
+        }
+    },
+
+    magnetism_advanced(p) {
+        const B = p.magnetism?.magnetic_field, q = p.electricity?.charge, v = p.initial_velocity?.magnitude;
+        const m = p.mass || 9.11e-31;
+        eq(p, 'F = qvB'); eq(p, 'r = mv/(qB)'); eq(p, 'ω = qB/m');
+        if (n(B) && n(q) && n(v)) {
+            calc(p, 'lorentz_force', Math.abs(q) * v * B);
+            if (q !== 0 && B !== 0) {
+                calc(p, 'cyclotron_radius', m * v / (Math.abs(q) * B));
+                calc(p, 'cyclotron_frequency', Math.abs(q) * B / m);
+            }
+        }
+    },
+
+    spring(p) {
+        const k = p.energy?.spring_constant || p.spring?.constant;
+        const m = p.mass || 1;
+        const x = p.spring?.displacement || p.displacement;
+        eq(p, 'F = -kx'); eq(p, 'PE = ½kx²'); eq(p, 'ω = √(k/m)'); eq(p, 'T = 2π/ω');
+        if (n(k) && n(x)) {
+            calc(p, 'spring_force', -k * x);
+            calc(p, 'elastic_pe', 0.5 * k * x * x);
+        }
+        if (n(k) && n(m) && k > 0 && m > 0) {
+            const omega = Math.sqrt(k / m);
+            calc(p, 'angular_frequency', omega);
+            calc(p, 'period', 2 * Math.PI / omega);
+            calc(p, 'frequency', omega / (2 * Math.PI));
+        }
+    },
+
+    pulley(p) {
+        const m1 = p.pulley?.mass1, m2 = p.pulley?.mass2;
+        const g = p.gravity || 9.8;
+        eq(p, 'a = (m₁−m₂)g/(m₁+m₂)'); eq(p, 'T = 2m₁m₂g/(m₁+m₂)');
+        if (n(m1) && n(m2) && (m1 + m2) > 0) {
+            calc(p, 'acceleration', (m1 - m2) * g / (m1 + m2));
+            calc(p, 'tension', 2 * m1 * m2 * g / (m1 + m2));
+        }
+    },
+
+    gravitation(p) {
+        const G = 6.674e-11;
+        const M = p.gravitation?.central_mass, m = p.mass;
+        const r_val = p.gravitation?.orbital_radius;
+        eq(p, 'F = GMm/r²'); eq(p, 'v = √(GM/r)'); eq(p, 'T = 2πr/v');
+        if (n(M) && n(m) && n(r_val) && r_val > 0) {
+            calc(p, 'gravitational_force', G * M * m / (r_val * r_val));
+            const v_orb = Math.sqrt(G * M / r_val);
+            calc(p, 'orbital_velocity', v_orb);
+            calc(p, 'orbital_period', 2 * Math.PI * r_val / v_orb);
+        }
+    },
+
+    elasticity(p) {
+        const F_val = p.forces?.applied, A_val = p.elasticity?.area;
+        const L0 = p.elasticity?.original_length, E_val = p.elasticity?.youngs_modulus;
+        eq(p, 'σ = F/A'); eq(p, 'ε = σ/E'); eq(p, 'ΔL = εL₀');
+        if (n(F_val) && n(A_val) && A_val !== 0) {
+            const stress = F_val / A_val;
+            calc(p, 'stress', stress);
+            if (n(E_val) && E_val !== 0) {
+                if (n(E_val)) calc(p, 'youngs_modulus', E_val);
+                const strain = stress / E_val; // strain needs to be defined here
+                if (n(stress) && n(E_val)) calc(p, 'strain', strain);
+                if (n(strain) && n(L0)) calc(p, 'deformation', strain * L0);
+            }
+        }
+    },
+
+    // ========== COMPOSITE TOPICS ==========
+
+    projectile_incline(p) {
+        const v0 = p.initial_velocity?.magnitude || 20;
+        const theta_launch = p.launch_angle || 25;
+        const theta_incline = p.incline?.angle || 45;
+        const g = p.gravity || 9.8;
+        const e = p.collision?.coefficient_of_restitution || 0.7;
+
+        eq(p, 'v₀ₓ = v₀·cos(θ)'); eq(p, 'v₀ᵧ = v₀·sin(θ)');
+        eq(p, 'Impact angle = θ_launch - θ_incline');
+        eq(p, 'Bounce: v\' = e·v');
+
+        const v0x = v0 * Math.cos(theta_launch * Math.PI / 180);
+        const v0y = v0 * Math.sin(theta_launch * Math.PI / 180);
+        calc(p, 'initial_vx', v0x);
+        calc(p, 'initial_vy', v0y);
+        calc(p, 'impact_angle_diff', theta_launch - theta_incline);
+        calc(p, 'restitution_coeff', e);
+    },
+
+    spring_friction(p) {
+        const m = p.mass || 2;
+        const k = p.spring?.constant || 50;
+        const mu_k = p.friction?.kinetic_coefficient || 0.15;
+        const g = p.gravity || 9.8;
+        const x0 = p.spring?.displacement || 1.5;
+
+        const omega_0 = Math.sqrt(k / m);
+        const f_friction = mu_k * m * g;
+        const b_eff = 2 * f_friction / (Math.PI * x0); // Effective damping
+
+        eq(p, 'ω₀ = √(k/m)'); eq(p, 'f_friction = μ_k·mg');
+        eq(p, 'Damping: b_eff ≈ 2f/(πx₀)');
+        eq(p, 'Energy loss per cycle ≈ 4μ_k·mg·x');
+
+        calc(p, 'natural_frequency', omega_0);
+        calc(p, 'friction_force', f_friction);
+        calc(p, 'effective_damping', b_eff);
+        calc(p, 'energy_loss_per_cycle', 4 * mu_k * m * g * x0);
+    },
+
+    pulley_spring(p) {
+        const m1 = p.pulley?.mass1 || 10;
+        const m2 = p.pulley?.mass2 || 5;
+        const k = p.pulley?.spring_constant || 20;
+        const g = p.gravity || 9.8;
+
+        const m_eff = (m1 * m2) / (m1 + m2);
+        const omega = Math.sqrt(k / m_eff);
+        const T_period = 2 * Math.PI / omega;
+
+        eq(p, 'm_eff = (m₁·m₂)/(m₁+m₂)');
+        eq(p, 'ω = √(k/m_eff)');
+        eq(p, 'T = 2π/ω');
+        eq(p, 'Δx_eq = (m₁-m₂)g/k');
+
+        calc(p, 'effective_mass', m_eff);
+        calc(p, 'angular_frequency', omega);
+        calc(p, 'period', T_period);
+        calc(p, 'equilibrium_extension', (m1 - m2) * g / k);
     }
 };
