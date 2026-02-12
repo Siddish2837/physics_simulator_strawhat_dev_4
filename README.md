@@ -240,7 +240,6 @@ app.use(cors());
 🧑‍💻 Team
 
 Strawhat Devs
-Second Year CSE
 
 Karthik
 
