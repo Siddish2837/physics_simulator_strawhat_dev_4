@@ -1,104 +1,269 @@
-# AI Engine — Physics Parameter Extraction & Routing
+📘 AI Physics Simulation Platform
 
-Converts natural-language physics problems into structured, validated JSON for simulation frontends. Uses the Gemini API through a backend proxy at `/api/ai`.
+Complete AI-powered Physics Simulation Platform
+Backend + Unified Physics Engine + Frontend App
 
-## Pipeline
+Built by Team Strawhat Devs 🚀
 
-```
-User Input → ai.js → parser.js → formula-engine.js → router.js → Simulation
-               ↓          ↓              ↓                ↓
-         Gemini API   Normalize    Compute formulas   Route by topic
-        (via proxy)   & validate   (hover tooltips)
-```
+🏗 Project Structure (Updated)
+vibe_coding_backend/
+│
+├── physics-engine-unified/
+│   ├── src/
+│   │   └── App.jsx      ← Main actual React App
+│   ├── index.html       ← Vite entry (real app)
+│   ├── vite.config.js
+│   └── package.json
+│
+├── server/              ← Backend (Express + AI)
+│   ├── server.js
+│   ├── routes/
+│   └── package.json
+│
+├── simulation-engine/   ← Core physics modules
+│
+├── index.html           ← Backend testing page (NOT main app)
+├── ai.js
+├── parser.js
+├── formula-engine.js
+└── package.json
 
-## Quick Start
+🔎 Important Clarification
 
-```js
-import { extractParameters }    from './ai-engine/ai.js';
-import { normalizeParams }      from './ai-engine/parser.js';
-import { attachComputedValues } from './ai-engine/formula-engine.js';
-import { routeToSimulation }    from './ai-engine/router.js';
+physics-engine-unified/src/App.jsx
+✅ This is the actual frontend application.
 
-// 1. Extract parameters from natural language
-const raw = await extractParameters('A ball is thrown at 20 m/s at 45 degrees');
+Root index.html
+⚠️ This is only for backend testing and debugging.
 
-// 2. Normalize & validate
-const clean = normalizeParams(raw);
+physics-engine-unified/index.html
+✅ This is the real Vite entry for the frontend app.
 
-// 3. Compute formulas (for hover tooltips)
-const final = attachComputedValues(clean);
+🧠 What This Platform Does
 
-// 4. Route to simulation
-routeToSimulation(final);
-```
+Accepts physics problems as natural language
 
-## Module Reference
+Uses AI to extract structured parameters
 
-| Module | Export | Description |
-|--------|--------|-------------|
-| `prompt.js` | `MASTER_PROMPT` | LLM system prompt |
-| `ai.js` | `extractParameters(text)` | POST to `/api/ai`, return parsed JSON |
-| `parser.js` | `normalizeParams(json)` | Validate, fill defaults, coerce types |
-| `formula-engine.js` | `attachComputedValues(params)` | Compute derived values by topic |
-| `router.js` | `registerSimulation(topic, fn)` | Register custom simulation handler |
-| `router.js` | `routeToSimulation(params)` | Route params to simulation by topic |
+Identifies motion type
 
-## Backend Proxy
+Runs realistic physics simulation
 
-`ai.js` sends requests to `/api/ai` (relative URL). The backend proxy:
-- Hides the Gemini API key
-- Handles rate limiting (429 retry)
-- Forwards `{ candidates: [...] }` response to the frontend
+Supports premium collision engine
 
-See `/server/README.md` for backend setup.
+Uses Clerk for authentication
 
-## Example Output
+Uses AI API (Gemini/OpenAI) for parsing
 
-**Input:** `"A 2kg ball is thrown at 25 m/s at 60 degrees"`
+⚙️ Tech Stack
+Backend
 
-**Output (after full pipeline):**
-```json
-{
-  "topic": "projectile",
-  "sub_topic": "angled_launch",
-  "object": "ball",
-  "mass": 2,
-  "gravity": 9.8,
-  "launch_angle": 60,
-  "initial_velocity": { "magnitude": 25, "direction": "60 degrees above horizontal" },
-  "formulas": {
-    "equations": ["R = (v₀²·sin(2θ)) / g", "H = (v₀²·sin²(θ)) / (2g)"],
-    "calculations": {
-      "velocity_x": 12.5,
-      "velocity_y": 21.650635,
-      "range": 55.230153,
-      "max_height": 23.928571,
-      "time_of_flight": 4.418497
-    }
-  }
-}
-```
+Node.js
 
-## Defaults (parser.js)
+Express.js
 
-| Field | Default |
-|-------|---------|
-| `gravity` | `9.8` |
-| `mass` | `1` |
-| `initial_position` | `{ x0: 0, y0: 0, z0: 0 }` |
-| Invalid values | `null` |
-| Numeric strings | Coerced to numbers |
+AI API (Gemini / OpenAI)
 
-## Supported Topics
+dotenv
 
-`linear_motion` · `projectile` · `circular_motion` · `forces` · `energy` · `collision` · `waves` · `optics` · `electricity` · `magnetism` · `thermodynamics` · `relativity`
+CORS
 
-## Connecting Simulations
+Rate limiter
 
-```js
-import { registerSimulation } from './ai-engine/router.js';
+Frontend
 
-registerSimulation('projectile', (params) => {
-  myCanvas.launchProjectile(params);
+React (App.jsx)
+
+Vite
+
+Canvas-based simulation
+
+Modular physics engine
+
+Authentication
+
+Clerk
+
+Physics Engine
+
+Custom impulse-based collision engine
+
+Formula-based solver
+
+JSON-driven simulation
+
+🚀 Installation Guide (Step-by-Step – Beginner Friendly)
+1️⃣ Clone the Project
+git clone https://github.com/Siddish2837/vibe_coding_backend.git
+cd vibe_coding_backend
+
+2️⃣ Setup Backend
+cd server
+npm install
+
+
+Create .env inside server/
+
+PORT=3000
+AI_API_KEY=your_ai_api_key_here
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+
+
+Start backend:
+
+npm start
+
+
+You should see:
+
+Server running on http://localhost:3000
+
+3️⃣ Setup Frontend (Actual App)
+cd ../physics-engine-unified
+npm install
+
+
+Create .env inside physics-engine-unified/
+
+VITE_API_URL=http://localhost:3000
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+
+
+Start frontend:
+
+npm run dev
+
+
+Open:
+
+http://localhost:5173
+
+
+That loads App.jsx (actual app).
+
+🔐 How to Add API Keys Properly
+
+NEVER commit real keys.
+
+Instead create:
+
+server/.env
+AI_API_KEY=sk-xxxx
+CLERK_SECRET_KEY=sk_test_xxxx
+
+physics-engine-unified/.env
+VITE_API_URL=http://localhost:3000
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxx
+
+
+Add .env to .gitignore.
+
+🚨 Fixing 429 Error (Rate Limit Error)
+
+429 means:
+
+Too many API requests
+
+API quota exceeded
+
+Free tier limit hit
+
+Fix 1: Add Rate Limiter on Backend
+
+In server.js:
+
+import rateLimit from "express-rate-limit";
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10
 });
-```
+
+app.use(limiter);
+
+Fix 2: Add Retry Delay in AI Call
+await new Promise(resolve => setTimeout(resolve, 1500));
+
+Fix 3: Upgrade AI API Plan
+
+Free tiers usually allow:
+
+5–15 requests per minute
+
+Fix 4: Cache Responses
+
+Store repeated physics problems in memory:
+
+const cache = {};
+if (cache[text]) return cache[text];
+
+🔌 API Flow
+
+Frontend (App.jsx)
+⬇
+POST /api/parse
+⬇
+Backend (Express)
+⬇
+AI API
+⬇
+Structured JSON
+⬇
+Simulation Engine
+
+🧪 Testing Backend Only
+
+Open:
+
+http://localhost:3000/index.html
+
+
+That is only for testing backend.
+
+NOT the real app.
+
+🌟 Features
+
+AI-based parameter extraction
+
+Realistic collision simulation
+
+Elastic & inelastic physics
+
+JSON-based architecture
+
+Clerk authentication
+
+Modular simulation engine
+
+Production-ready structure
+
+🛠 Common Errors & Fixes
+❌ 429 Too Many Requests
+
+→ Reduce request frequency
+→ Add rate limit
+→ Upgrade API plan
+
+❌ CORS Error
+
+→ Add:
+
+app.use(cors());
+
+❌ Undefined API URL
+
+→ Check VITE_API_URL in frontend .env
+
+🧑‍💻 Team
+
+Strawhat Devs
+Second Year CSE
+
+Karthik
+
+Sai
+
+Phani
+
+Siddish
