@@ -24,6 +24,93 @@ An interactive, premium physics simulation platform built with React, Vite, and 
 *   **Visual Polish**: Neon aesthetics, motion trails, vector arrows, and glassmorphic panels.
 
 ---
+## Tech Stack
+
+Our AI Physics Simulation Platform is built using a modular full-stack architecture combining AI, physics computation, and modern frontend technologies.
+
+🖥️ Frontend (Physics Engine + UI)
+
+React (App.jsx) – Core UI framework for building interactive components
+
+Vite – Fast frontend build tool and development server
+
+JavaScript (ES Modules) – Modular and scalable code structure
+
+HTML5 Canvas – Real-time physics rendering and animation
+
+CSS3 – Modern responsive UI styling
+
+Clerk – User authentication and session management
+
+⚙️ Backend (AI Processing Server)
+
+Node.js – JavaScript runtime environment
+
+Express.js – Lightweight REST API framework
+
+dotenv – Secure environment variable management
+
+CORS – Cross-origin resource sharing middleware
+
+Rate Limiter (express-rate-limit) – Prevents API abuse and 429 errors
+
+Custom AI Proxy Layer – Handles secure communication with AI provider
+
+🧠 AI Layer
+
+LLM API (Gemini / OpenAI) – Natural language understanding
+
+Physics parameter extraction
+
+Motion type classification
+
+Structured JSON generation
+
+🧮 Physics Simulation Engine
+
+Custom-built Impulse-Based Collision Engine
+
+Elastic & Inelastic collision support
+
+Formula-based computation module
+
+JSON-driven simulation initialization
+
+Modular motion handlers:
+
+Projectile Motion
+
+Circular Motion
+
+Linear Motion
+
+Collision Dynamics
+
+🔐 Authentication
+
+Clerk
+
+Secure login/signup
+
+Session management
+
+Protected routes
+
+📡 Communication Layer
+
+REST API (POST /api/parse)
+
+JSON-based request/response system
+
+Frontend ↔ Backend integration via fetch()
+
+🛠 Development Tools
+
+Git & GitHub – Version control
+
+npm – Package management
+
+VS Code – Development environment
 
 ## 🛠️ Step-by-Step Installation
 
