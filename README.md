@@ -94,7 +94,7 @@ https://drive.google.com/file/d/1lSBtM7gkFTD3asRtdI30DJ3GRy0BoZqb/view?usp=drive
 ---
 
 ## 🧑‍💻 Team: Strawhat Devs
-*   **Karthik**
-*   **Sai**
+*   **Karthikeya**
+*   **Sai Charan**
 *   **Phani**
-*   **Siddish**
+*   **Siddish.K**
