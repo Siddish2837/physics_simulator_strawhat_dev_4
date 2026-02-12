@@ -7,6 +7,8 @@ Built by Team Strawhat Devs 🚀
 
 🏗 Project Structure (Updated)
 
+<img width="579" height="542" alt="image" src="https://github.com/user-attachments/assets/74e4c36d-6c43-45e4-882b-205c00d48f8f" />
+
 vibe_coding_backend/
 │
 ├── physics-engine-unified/
