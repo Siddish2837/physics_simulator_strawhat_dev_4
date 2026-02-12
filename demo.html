@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation — AI Engine Demo</title>
+    <link rel="stylesheet" href="simulation-engine/ui-overlay.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            color: #00f5ff;
+            margin-bottom: 16px;
+            text-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            max-width: 900px;
+            margin: 0 auto 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .controls textarea {
+            flex: 1;
+            min-width: 300px;
+            height: 50px;
+            padding: 12px;
+            background: #12122a;
+            color: #eee;
+            border: 1px solid #1a1a3e;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+        }
+
+        .controls textarea:focus {
+            outline: none;
+            border-color: #00f5ff;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 12px;
+            font-family: inherit;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-go {
+            background: #00f5ff;
+            color: #0a0a1a;
+            font-weight: 700;
+        }
+
+        .btn-preset {
+            background: #1a1a3e;
+            color: #aaa;
+        }
+
+        .btn-preset:hover {
+            background: #2a2a5e;
+            color: #fff;
+        }
+
+        .btn-ctrl {
+            background: #222;
+            color: #888;
+            font-size: 16px;
+            padding: 8px 14px;
+        }
+
+        .btn-ctrl:hover {
+            color: #fff;
+        }
+
+        .canvas-wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #simCanvas {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .status-bar {
+            max-width: 900px;
+            margin: 10px auto 0;
+            font-size: 11px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .presets {
+            max-width: 900px;
+            margin: 0 auto 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>⚛️ Physics Simulation Engine</h1>
+    <p class="subtitle">Type a physics problem or pick a preset — watch it simulate instantly</p>
+
+    <div class="presets">
+        <button class="btn-preset" data-preset="projectile">🏀 Projectile</button>
+        <button class="btn-preset" data-preset="linear">🚗 Linear Motion</button>
+        <button class="btn-preset" data-preset="circular">🔄 Circular Motion</button>
+        <button class="btn-preset" data-preset="wave">🌊 Wave</button>
+        <button class="btn-preset" data-preset="optics">🔍 Optics (Lens)</button>
+        <button class="btn-preset" data-preset="optics_ray">💡 Refraction</button>
+        <button class="btn-preset" data-preset="energy">⚡ Energy</button>
+        <button class="btn-preset" data-preset="collision">💥 Collision</button>
+        <button class="btn-preset" data-preset="electric">🔌 Electric Field</button>
+        <button class="btn-preset" data-preset="magnetic">🧲 Magnetic Field</button>
+    </div>
+
+    <div class="controls">
+        <textarea id="input"
+            placeholder="A ball is thrown at 25 m/s at 60 degrees from a 5m height...">A ball is thrown at 25 m/s at 60 degrees from a 5 meter building</textarea>
+        <div class="btn-row">
+            <button class="btn-go" id="runBtn">▶ Simulate</button>
+            <button class="btn-ctrl" id="pauseBtn" title="Pause/Play">⏸</button>
+            <button class="btn-ctrl" id="resetBtn" title="Reset">↺</button>
+            <div class="divider" style="width:1px;height:24px;background:#333;margin:0 4px;"></div>
+            <button class="btn-ctrl" id="zoomOutBtn" title="Zoom Out">−</button>
+            <button class="btn-ctrl" id="zoomInBtn" title="Zoom In">+</button>
+            <button class="btn-ctrl" id="recenterBtn" title="Recenter View">⌖</button>
+            <select id="unitSelect"
+                style="background:#12122a; color:#aaa; border:1px solid #333; border-radius:4px; padding:4px; font-family:inherit; font-size:11px;">
+                <option value="m" selected>Scale: Meters (m)</option>
+                <option value="cm">Centimeters (cm)</option>
+                <option value="mm">Millimeters (mm)</option>
+                <option value="km">Kilometers (km)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="canvas-wrap">
+        <canvas id="simCanvas" width="900" height="600"></canvas>
+    </div>
+    <div class="status-bar">
+        <span id="statusTopic">Topic: —</span>
+        <span id="statusInfo">Ready</span>
+    </div>
+
+    <script type="module">
+        import { extractParameters } from './ai.js';
+        import { normalizeParams } from './parser.js';
+        import { attachComputedValues } from './formula-engine.js';
+        import { initSimulation, load, start, stop, reset, getObjects } from './simulation-engine/simulation-core.js';
+        import { initTooltip } from './simulation-engine/tooltip.js';
+
+        import { simulateLinearMotion } from './simulation-engine/motion-sim.js';
+        import { simulateProjectile } from './simulation-engine/projectile-sim.js';
+        import { simulateCircularMotion } from './simulation-engine/circular-sim.js';
+        import { simulateWave } from './simulation-engine/waves-sim.js';
+        import { simulateOptics } from './simulation-engine/optics-sim.js';
+        import { simulateEnergy } from './simulation-engine/energy-sim.js';
+        import { simulateCollisions } from './simulation-engine/collisions-sim.js';
+        import { simulateFields } from './simulation-engine/fields-sim.js';
+
+        // Sim map
+        const SIM_MAP = {
+            linear_motion: simulateLinearMotion,
+            projectile: simulateProjectile,
+            circular_motion: simulateCircularMotion,
+            waves: simulateWave,
+            optics: simulateOptics,
+            energy: simulateEnergy,
+            collision: simulateCollisions,
+            electricity: simulateFields,
+            magnetism: simulateFields
+        };
+
+        // Presets (offline fallback)
+        const PRESETS = {
+            projectile: {
+                topic: 'projectile', sub_topic: 'angled_launch', object: 'Ball',
+                initial_velocity: { magnitude: 25, direction: '60° above horizontal' },
+                launch_angle: 60, launch_height: 5, gravity: 9.8, mass: 2,
+                initial_position: { x0: 0, y0: 5, z0: 0 },
+                formulas: { equations: ['R = v₀²sin(2θ)/g', 'H = v₀²sin²(θ)/2g', 'T = 2v₀sin(θ)/g'], calculations: { range: 55.2, max_height: 29.0, time_of_flight: 4.42 } }
+            },
+            linear: {
+                topic: 'linear_motion', sub_topic: 'uniform_acceleration', object: 'Car',
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                initial_velocity: { magnitude: 5, direction: 'right' },
+                acceleration: { value: 2, direction: 'right', type: 'uniform' },
+                mass: 1000, gravity: 9.8,
+                formulas: { equations: ['x = x₀+v₀t+½at²', 'v = v₀+at'], calculations: { final_velocity_5s: 15, displacement_5s: 50 } }
+            },
+            circular: {
+                topic: 'circular_motion', sub_topic: 'uniform', object: 'Satellite',
+                radius: 100, angular_velocity: 1.5, mass: 5, gravity: 9.8,
+                initial_position: { x0: 0, y0: 0, z0: 0 },
+                initial_velocity: { magnitude: 150, direction: 'tangent' },
+                formulas: { equations: ['v=ωr', 'ac=v²/r', 'Fc=mv²/r'], calculations: { speed: 150, centripetal_acceleration: 225, period: 4.19 } }
+            },
+            wave: {
+                topic: 'waves', sub_topic: 'transverse', object: 'Wave',
+                waves: { wavelength: 2, frequency: 3, amplitude: 1.5, speed: 6, type: 'transverse', period: 0.33, phase: 0, phenomena: null, doppler: { source_velocity: null, observer_velocity: null } },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['v = fλ', 'T = 1/f', 'y = A·sin(2πft−kx)'], calculations: { wave_speed: 6, period: 0.333 } }
+            },
+            optics: {
+                topic: 'optics', sub_topic: 'lens', object: 'Light',
+                optics: { type: 'lens', focal_length: 60, object_distance: 120, image_distance: 120, angles: { incidence: null, reflection: null, refraction: null }, indices: { n1: null, n2: null } },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['1/f = 1/dₒ + 1/dᵢ', 'M = −dᵢ/dₒ'], calculations: { magnification: -1, image_distance: 120 } }
+            },
+            optics_ray: {
+                topic: 'optics', sub_topic: 'refraction', object: 'Light Ray',
+                optics: { type: 'refraction', focal_length: null, object_distance: null, image_distance: null, angles: { incidence: 45, reflection: 45, refraction: 28.1 }, indices: { n1: 1.0, n2: 1.5 } },
+                gravity: 9.8, mass: 1, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['n₁sin(θ₁) = n₂sin(θ₂)'], calculations: { angle_of_refraction: 28.1 } }
+            },
+            energy: {
+                topic: 'energy', sub_topic: 'conservation', object: 'Ball',
+                mass: 2, gravity: 9.8, launch_height: 40,
+                initial_velocity: { magnitude: 0, direction: 'none' },
+                initial_position: { x0: 0, y0: 40, z0: 0 },
+                energy: { kinetic: 0, potential_gravitational: 784, work_done: null, power: null, spring_constant: null },
+                formulas: { equations: ['KE=½mv²', 'PE=mgh', 'E=KE+PE'], calculations: { total_energy: 784, potential_energy: 784, kinetic_energy: 0 } }
+            },
+            collision: {
+                topic: 'collision', sub_topic: 'elastic', object: 'Objects',
+                collision: { type: 'elastic', masses: [3, 1], velocities_before: [4, -2], velocities_after: [1, 7], impulse: null },
+                mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['p=mv', 'm₁u₁+m₂u₂=m₁v₁+m₂v₂'], calculations: { momentum_before: 10, momentum_after: 10 } }
+            },
+            electric: {
+                topic: 'electricity', sub_topic: 'electric_field', object: 'Charge',
+                electricity: { charge: 5, electric_field: 100, voltage: null, current: null, resistance: null },
+                mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['E = kQ/r²', 'F = qE'], calculations: { field_strength: 100 } }
+            },
+            magnetic: {
+                topic: 'magnetism', sub_topic: 'magnetic_field', object: 'Wire',
+                magnetism: { magnetic_field: 0.5, force_on_charge: null, induced_emf: null },
+                mass: 1, gravity: 9.8, initial_position: { x0: 0, y0: 0, z0: 0 },
+                formulas: { equations: ['B = μ₀I/(2πr)', 'F = qvB'], calculations: { magnetic_field: 0.5 } }
+            }
+        };
+
+        // Init
+        const { canvas } = initSimulation('simCanvas');
+        initTooltip(canvas, getObjects);
+        let paused = false;
+
+        function runSimulation(rawParams) {
+            const clean = normalizeParams(rawParams);
+            const final = attachComputedValues(clean);
+            const simFn = SIM_MAP[final.topic];
+
+            document.getElementById('statusTopic').textContent = `Topic: ${final.topic} / ${final.sub_topic || '—'}`;
+
+            if (!simFn) {
+                document.getElementById('statusInfo').textContent = `No simulation for topic "${final.topic}"`;
+                return;
+            }
+
+            load(simFn, final);
+            paused = false;
+            document.getElementById('pauseBtn').textContent = '⏸';
+            document.getElementById('statusInfo').textContent = '🟢 Running';
+        }
+
+        // Preset buttons
+        document.querySelectorAll('.btn-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.dataset.preset;
+                if (PRESETS[key]) {
+                    document.getElementById('statusInfo').textContent = '🟢 Running (preset)';
+                    runSimulation(PRESETS[key]);
+                }
+            });
+        });
+
+        // ======= INPUT VALIDATION =======
+        const PHYSICS_KEYWORDS = [
+            'velocity', 'speed', 'acceleration', 'force', 'mass', 'gravity',
+            'projectile', 'throw', 'thrown', 'launch', 'ball', 'bullet', 'fired',
+            'wave', 'frequency', 'amplitude', 'wavelength', 'oscillat', 'hertz',
+            'lens', 'mirror', 'refract', 'reflect', 'snell', 'optic', 'focal', 'prism', 'light', 'ray',
+            'circular', 'orbit', 'rotation', 'angular', 'centripetal', 'revolv', 'radius',
+            'energy', 'kinetic', 'potential', 'joule', 'watt', 'power', 'work',
+            'collision', 'elastic', 'inelastic', 'momentum', 'impulse',
+            'electric', 'charge', 'voltage', 'current', 'ohm', 'coulomb', 'capacitor', 'resistor',
+            'magnet', 'magnetic', 'tesla', 'inducto', 'solenoid', 'wire',
+            'linear', 'motion', 'car', 'vehicle', 'train', 'object',
+            'newton', 'friction', 'drag', 'tension', 'spring', 'hooke',
+            'pendulum', 'simple harmonic', 'shm',
+            'angle', 'degree', 'm/s', 'km/h', 'kg', 'meter', 'displacement',
+            'height', 'distance', 'fall', 'drop', 'rise', 'incline', 'slope',
+            'pressure', 'density', 'buoyancy', 'fluid', 'torque', 'lever',
+        ];
+
+        function isPhysicsInput(text) {
+            const lower = text.toLowerCase();
+            return PHYSICS_KEYWORDS.some(kw => lower.includes(kw));
+        }
+
+        function detectPreset(text) {
+            const input = text.toLowerCase();
+            if (input.includes('wave') || input.includes('oscillat') || input.includes('frequency') || input.includes('amplitude')) return 'wave';
+            if (input.includes('lens') || input.includes('mirror') || input.includes('focal')) return 'optics';
+            if (input.includes('refract') || input.includes('snell') || input.includes('prism')) return 'optics_ray';
+            if (input.includes('circular') || input.includes('orbit') || input.includes('angular') || input.includes('revolv') || input.includes('centripetal')) return 'circular';
+            if (input.includes('energy') || input.includes('kinetic') || input.includes('potential') || input.includes('joule')) return 'energy';
+            if (input.includes('collision') || input.includes('elastic') || input.includes('inelastic') || input.includes('momentum')) return 'collision';
+            if (input.includes('electric') || input.includes('charge') || input.includes('coulomb') || input.includes('voltage')) return 'electric';
+            if (input.includes('magnet') || input.includes('tesla') || input.includes('solenoid')) return 'magnetic';
+            if (input.includes('linear') && input.includes('motion')) return 'linear';
+            if ((input.includes('car') || input.includes('vehicle') || input.includes('train')) && (input.includes('accelerat') || input.includes('speed') || input.includes('velocity'))) return 'linear';
+            if (input.includes('throw') || input.includes('thrown') || input.includes('launch') || input.includes('projectile') || input.includes('angle') || input.includes('fired')) return 'projectile';
+            if (input.includes('fall') || input.includes('drop') || input.includes('height') || input.includes('gravity')) return 'projectile';
+            if (input.includes('velocity') || input.includes('speed') || input.includes('acceleration') || input.includes('m/s')) return 'linear';
+            return null; // no match
+        }
+
+        function showNotPhysicsError(ctx, canvas, inputText) {
+            stop();
+            // Draw dark background
+            const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            g.addColorStop(0, '#080818');
+            g.addColorStop(1, '#0d0d2b');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Error icon
+            ctx.save();
+            ctx.font = '48px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🚫', canvas.width / 2, 180);
+
+            // Error message
+            ctx.font = 'bold 18px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillText('Not a physics problem', canvas.width / 2, 230);
+
+            // User input (truncated)
+            ctx.font = '13px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#666';
+            const display = inputText.length > 50 ? inputText.substring(0, 50) + '...' : inputText;
+            ctx.fillText(`"${display}"`, canvas.width / 2, 265);
+
+            // Help text
+            ctx.font = '13px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#888';
+            ctx.fillText('Please enter a physics problem. Examples:', canvas.width / 2, 320);
+
+            // Examples
+            const examples = [
+                '"A ball is thrown at 20 m/s at 45 degrees"',
+                '"A car accelerates from rest at 3 m/s²"',
+                '"A wave with frequency 5 Hz and wavelength 2m"',
+                '"Two objects collide elastically"',
+                '"Light passes from air into glass at 30°"',
+            ];
+            ctx.font = '11px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#4ecdc4';
+            examples.forEach((ex, i) => {
+                ctx.fillText(ex, canvas.width / 2, 360 + i * 24);
+            });
+
+            // Or use presets
+            ctx.font = '12px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#ff9f43';
+            ctx.fillText('Or click a preset button above ↑', canvas.width / 2, 510);
+            ctx.textAlign = 'left';
+            ctx.restore();
+        }
+
+        // ======= SIMULATE BUTTON — REAL AI ENGINE =======
+        document.getElementById('runBtn').addEventListener('click', async () => {
+            const inputEl = document.getElementById('input');
+            const runBtn = document.getElementById('runBtn');
+            const statusInfo = document.getElementById('statusInfo');
+            const inputText = inputEl.value.trim();
+            const canvasEl = document.getElementById('simCanvas');
+            const ctxEl = canvasEl.getContext('2d');
+
+            if (!inputText) { statusInfo.textContent = '⚠️ Enter a physics problem first'; return; }
+
+            // Validate: is this a physics problem?
+            if (!isPhysicsInput(inputText)) {
+                statusInfo.textContent = '🚫 Not a physics problem — try a real physics question';
+                showNotPhysicsError(ctxEl, canvasEl, inputText);
+                return;
+            }
+
+            // Disable button, show loading
+            runBtn.disabled = true;
+            runBtn.textContent = '⏳ Analyzing...';
+            statusInfo.textContent = '🔄 Sending to AI engine...';
+
+            try {
+                // 1. Call the real AI engine (Gemini via backend proxy)
+                const rawParams = await extractParameters(inputText);
+
+                // Validate the AI response has a valid topic
+                if (!rawParams.topic || !SIM_MAP[rawParams.topic]) {
+                    throw new Error(`AI returned unknown topic: ${rawParams.topic}`);
+                }
+
+                statusInfo.textContent = '✅ AI extracted params — starting simulation';
+                runSimulation(rawParams);
+
+            } catch (err) {
+                console.error('AI Engine error:', err);
+
+                // Fallback: keyword-match to a preset (only if physics)
+                const preset = detectPreset(inputText);
+                if (preset) {
+                    statusInfo.textContent = '🟡 API unavailable — using keyword match';
+                    runSimulation(PRESETS[preset]);
+                } else {
+                    statusInfo.textContent = '❌ Could not determine simulation type';
+                    showNotPhysicsError(ctxEl, canvasEl, inputText);
+                }
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = '▶ Simulate';
+            }
+        });
+
+        // Pause/Play
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (paused) { start(); paused = false; document.getElementById('pauseBtn').textContent = '⏸'; document.getElementById('statusInfo').textContent = '🟢 Running'; }
+            else { stop(); paused = true; document.getElementById('pauseBtn').textContent = '▶'; document.getElementById('statusInfo').textContent = '⏸ Paused'; }
+        });
+
+        // Reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            reset();
+            paused = false;
+            document.getElementById('pauseBtn').textContent = '⏸';
+            document.getElementById('statusInfo').textContent = '↺ Reset — Running';
+            start();
+        });
+
+        // View Controls
+        import { setZoom, getCamera, resetView, setUnit } from './simulation-engine/simulation-core.js';
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            const cam = getCamera();
+            setZoom(cam.zoom * 1.2);
+        });
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            const cam = getCamera();
+            setZoom(cam.zoom / 1.2);
+        });
+        document.getElementById('recenterBtn').addEventListener('click', () => {
+            resetView();
+        });
+        document.getElementById('unitSelect').addEventListener('change', (e) => {
+            setUnit(e.target.value);
+            if (paused) { start(); setTimeout(stop, 50); }
+        });
+
+        // Auto-run projectile on load
+        runSimulation(PRESETS.projectile);
+    </script>
+</body>
+
+</html>

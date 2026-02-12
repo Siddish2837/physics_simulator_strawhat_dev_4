@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Engine Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            font-size: 14px;
+            padding: 10px;
+            background: #16213e;
+            color: #eee;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 24px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .btn-mock {
+            background: #0f3460;
+            color: #fff;
+        }
+
+        .btn-mock:hover {
+            background: #1a4a7a;
+        }
+
+        .btn-live {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-live:hover {
+            background: #c73e54;
+        }
+
+        button:disabled {
+            background: #555 !important;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background: #16213e;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status {
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .ok {
+            background: #1b4332;
+            color: #95d5b2;
+        }
+
+        .err {
+            background: #4a1a2e;
+            color: #f5a0a0;
+        }
+
+        .info {
+            background: #1a3a5c;
+            color: #a0d0f5;
+        }
+
+        .warn {
+            background: #4a3a1a;
+            color: #f5d5a0;
+        }
+
+        h3 {
+            margin: 16px 0 4px;
+            color: #a0d0f5;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>🧪 AI Engine — Test Page</h2>
+    <label>Enter a physics problem:</label>
+    <textarea id="input">A ball is thrown at 20 m/s at an angle of 45 degrees from a 10 meter high building.</textarea>
+    <br>
+    <button class="btn-mock" onclick="runTest('mock')">🧪 Mock Test (no API)</button>
+    <button class="btn-live" onclick="runTest('live')">🌐 Live Test (needs backend)</button>
+    <div id="log"></div>
+
+    <script type="module">
+        import { normalizeParams } from './parser.js';
+        import { attachComputedValues } from './formula-engine.js';
+        import { routeToSimulation } from './router.js';
+
+        const log = document.getElementById('log');
+        const add = (msg, cls = 'info') => { const d = document.createElement('div'); d.className = `status ${cls}`; d.textContent = msg; log.appendChild(d); };
+        const json = (label, obj) => { const h = document.createElement('h3'); h.textContent = label; log.appendChild(h); const p = document.createElement('pre'); p.textContent = JSON.stringify(obj, null, 2); log.appendChild(p); };
+
+        function mockLLMResponse() {
+            return {
+                topic: "projectile", sub_topic: "angled_launch", object: "ball",
+                initial_position: { x0: 0, y0: 10, z0: 0 },
+                initial_velocity: { magnitude: 20, direction: "45 degrees above horizontal" },
+                acceleration: { value: -9.8, direction: "downward", type: "gravitational" },
+                mass: 1, time: null, distance: null, displacement: null,
+                launch_angle: 45, launch_height: 10, gravity: 9.8, air_resistance: null,
+                formulas: { equations: ["x = v₀·cos(θ)·t", "y = v₀·sin(θ)·t − ½gt²"], calculations: { velocity_x: 14.14, velocity_y: 14.14 } }
+            };
+        }
+
+        async function liveExtract(text) {
+            const body = { contents: [{ parts: [{ text }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } };
+            const res = await fetch('http://localhost:3000/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+            const data = await res.json();
+            const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!raw) throw new Error('Empty Gemini response');
+            return JSON.parse(raw.replace(/^```json?\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim());
+        }
+
+        window.runTest = async function (mode) {
+            log.innerHTML = '';
+            document.querySelectorAll('button').forEach(b => b.disabled = true);
+            const input = document.getElementById('input').value.trim();
+            if (!input) { add('Enter a physics problem.', 'err'); document.querySelectorAll('button').forEach(b => b.disabled = false); return; }
+
+            try {
+                let raw;
+                if (mode === 'mock') {
+                    add('Step 1: Using MOCK LLM response (no API call)', 'warn');
+                    raw = mockLLMResponse();
+                    add('✅ Step 1 — Mock data loaded', 'ok');
+                } else {
+                    add('Step 1: Calling /api/ai (live Gemini via backend proxy)...');
+                    raw = await liveExtract(input);
+                    add('✅ Step 1 — Got JSON from Gemini', 'ok');
+                }
+                json('Raw LLM Output', raw);
+
+                add('Step 2: Normalizing (normalizeParams)...');
+                const clean = normalizeParams(raw);
+                add('✅ Step 2 — Normalized', 'ok');
+                json('Normalized Output', clean);
+
+                add('Step 3: Computing formulas (attachComputedValues)...');
+                const final = attachComputedValues(clean);
+                add('✅ Step 3 — Formulas attached', 'ok');
+                json('Final Output', final);
+
+                add('Step 4: Routing (routeToSimulation)...');
+                const result = routeToSimulation(final);
+                add(`✅ Step 4 — Routed to "${result.simulation}"`, 'ok');
+
+                add('🎉 Full pipeline passed!', 'ok');
+            } catch (err) {
+                add(`❌ Error: ${err.message}`, 'err');
+            }
+            document.querySelectorAll('button').forEach(b => b.disabled = false);
+        };
+    </script>
+</body>
+
+</html>
