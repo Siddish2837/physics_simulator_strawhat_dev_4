@@ -9,27 +9,6 @@ Built by Team Strawhat Devs 🚀
 
 <img width="579" height="542" alt="image" src="https://github.com/user-attachments/assets/74e4c36d-6c43-45e4-882b-205c00d48f8f" />
 
-vibe_coding_backend/
-│
-├── physics-engine-unified/
-│   ├── src/
-│   │   └── App.jsx      ← Main actual React App
-│   ├── index.html       ← Vite entry (real app)
-│   ├── vite.config.js
-│   └── package.json
-│
-├── server/              ← Backend (Express + AI)
-│   ├── server.js
-│   ├── routes/
-│   └── package.json
-│
-├── simulation-engine/   ← Core physics modules
-│
-├── index.html           ← Backend testing page (NOT main app)
-├── ai.js
-├── parser.js
-├── formula-engine.js
-└── package.json
 
 🔎 Important Clarification
 
