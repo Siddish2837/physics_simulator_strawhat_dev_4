@@ -87,6 +87,11 @@ npm install
 *   `src/components/RightPanel.jsx`: Main UI/Canvas bridge.
 
 ---
+## DEMO
+
+https://drive.google.com/file/d/1lSBtM7gkFTD3asRtdI30DJ3GRy0BoZqb/view?usp=drivesdk
+
+---
 
 ## 🧑‍💻 Team: Strawhat Devs
 *   **Karthik**
